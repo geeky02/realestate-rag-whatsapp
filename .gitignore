@@ -43,3 +43,4 @@ $RECYCLE.BIN/
 *.tmp
 *.temp
 .vercel
+.env*.local

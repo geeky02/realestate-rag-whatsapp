@@ -83,3 +83,62 @@ If you don't know something, say so - don't make up information.`;
   },
 });
 
+// Agent Component: Generate intelligent response with conversation history
+export const generateAgentResponse = action({
+  args: {
+    query: v.string(),
+    context: v.string(),
+    conversationHistory: v.array(v.any()),
+  },
+  handler: async (_ctx, args) => {
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY not configured");
+    }
+
+    const systemPrompt = `You are an intelligent AI agent for a real estate brokerage.
+
+CAPABILITIES:
+- Answer questions about properties using RAG (Retrieved Augmented Generation)
+- Maintain conversation context and remember previous messages
+- Analyze images and audio transcriptions
+- Provide accurate information from uploaded documents
+- Help schedule viewings and answer property questions
+
+INSTRUCTIONS:
+- Use the provided context from documents and conversation history
+- Be professional, helpful, and concise
+- If information is not in the context, acknowledge what you don't know
+- Reference specific properties and details when available
+- Maintain a friendly, consultative tone`;
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: `${args.context}\n\nRespond to the client's query naturally and helpfully.` },
+    ];
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4",
+        messages,
+        temperature: 0.7,
+        max_tokens: 600,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`OpenAI API error: ${error}`);
+    }
+
+    const result = await response.json();
+    return result.choices[0].message.content as string;
+  },
+});
+

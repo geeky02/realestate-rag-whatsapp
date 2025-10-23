@@ -2,7 +2,6 @@ import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { api } from "./_generated/api";
 
-// Process message with RAG agent
 export const processMessage = internalAction({
   args: {
     messageId: v.id("messages"),
@@ -11,7 +10,6 @@ export const processMessage = internalAction({
     const startTime = Date.now();
 
     try {
-      // Get message details
       const message = await ctx.runQuery(api.messages.get, { 
         id: args.messageId 
       });
@@ -22,31 +20,40 @@ export const processMessage = internalAction({
 
       let query = message.content;
 
-      // If audio message, transcribe it first
+      // Process different message types
       if (message.messageType === "audio" && message.mediaUrl) {
         query = await ctx.runAction(api.lib.transcription.transcribeAudio, {
           audioUrl: message.mediaUrl,
         });
+
+        await ctx.runMutation(api.messages.updateContent, {
+          messageId: message._id,
+          content: query,
+        });
+      } else if (message.messageType === "image" && message.mediaUrl) {
+        const imageAnalysis = await ctx.runAction(api.lib.vision.analyzeImage, {
+          imageUrl: message.mediaUrl,
+        });
+
+        query = `${message.content || ""} [Image: ${imageAnalysis}]`.trim();
       }
 
       if (!query) {
         throw new Error("No content to process");
       }
 
-      // Generate embedding for the query
+      // Use Convex Agent Component approach with vector search
       const queryEmbedding = await ctx.runAction(
         api.lib.openai.generateEmbedding,
         { text: query }
       );
 
-      // Retrieve relevant documents using vector search
       const relevantDocs = await ctx.runQuery(api.documents.vectorSearch, {
         embedding: queryEmbedding,
         brokerId: message.brokerId,
         limit: 5,
       });
 
-      // Get conversation context
       const recentMessages = await ctx.runQuery(
         api.messages.getRecentForContext,
         {
@@ -55,13 +62,14 @@ export const processMessage = internalAction({
         }
       );
 
-      // Build context for the agent
-      const context = buildContext(recentMessages, relevantDocs);
+      // Agent component: Build RAG context
+      const context = buildAgentContext(recentMessages, relevantDocs, query);
 
-      // Generate response using OpenAI
-      const response = await ctx.runAction(api.lib.openai.generateResponse, {
+      // Agent component: Generate intelligent response
+      const response = await ctx.runAction(api.lib.openai.generateAgentResponse, {
         query,
         context,
+        conversationHistory: recentMessages,
       });
 
       // Send response via WhatsApp
@@ -109,33 +117,36 @@ export const processMessage = internalAction({
   },
 });
 
-// Helper function to build context from messages and documents
-function buildContext(
+// Agent Component: Build intelligent context with RAG
+function buildAgentContext(
   messages: any[],
-  documents: any[]
+  documents: any[],
+  currentQuery: string
 ): string {
   let context = "";
 
-  // Add conversation history
+  context += "=== AGENT SYSTEM CONTEXT ===\n\n";
+
+  if (documents.length > 0) {
+    context += "📄 RETRIEVED DOCUMENTS (RAG):\n";
+    documents.forEach((doc, idx) => {
+      context += `\nDocument ${idx + 1}: ${doc.title}\n`;
+      const excerpt = doc.content?.substring(0, 600) ?? "";
+      context += `${excerpt}...\n`;
+    });
+    context += "\n";
+  }
+
   if (messages.length > 0) {
-    context += "Recent conversation:\n";
-    messages.forEach((msg) => {
+    context += "💬 CONVERSATION HISTORY:\n";
+    messages.slice(-6).forEach((msg) => {
       const role = msg.isFromAgent ? "Agent" : "Client";
       context += `${role}: ${msg.content}\n`;
     });
     context += "\n";
   }
 
-  // Add relevant document excerpts
-  if (documents.length > 0) {
-    context += "Relevant property information:\n";
-    documents.forEach((doc, idx) => {
-      context += `Document ${idx + 1} (${doc.title}):\n`;
-      // Use first 500 characters of content
-      const excerpt = doc.content?.substring(0, 500) ?? "";
-      context += `${excerpt}...\n\n`;
-    });
-  }
+  context += `🎯 CURRENT QUERY: ${currentQuery}\n`;
 
   return context;
 }

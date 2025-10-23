@@ -31,12 +31,39 @@ export const create = mutation({
       sentAt: Date.now(),
     });
 
-    // Update conversation's last message timestamp
     await ctx.db.patch(args.conversationId, {
       lastMessageAt: Date.now(),
     });
 
     return messageId;
+  },
+});
+
+// Update message content (e.g., after transcription)
+export const updateContent = mutation({
+  args: {
+    messageId: v.id("messages"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.messageId, {
+      content: args.content,
+    });
+    return args.messageId;
+  },
+});
+
+// Update message media URL (e.g., after storing in Convex Storage)
+export const updateMediaUrl = mutation({
+  args: {
+    messageId: v.id("messages"),
+    mediaUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.messageId, {
+      mediaUrl: args.mediaUrl,
+    });
+    return args.messageId;
   },
 });
 

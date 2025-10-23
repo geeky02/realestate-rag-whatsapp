@@ -114,6 +114,55 @@ http.route({
   }),
 });
 
+// Handle Evolution API send-message webhooks
+http.route({
+  path: "/whatsapp/webhook/send-message",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const body = await request.json();
+      
+      // Log the webhook for debugging
+      await ctx.runMutation(api.lib.logging.log, {
+        level: "info",
+        category: "whatsapp",
+        message: "Received send-message webhook",
+        metadata: { webhookData: body },
+      });
+
+      // Handle message status updates or delivery reports
+      if (body.status && body.key?.id) {
+        await ctx.runMutation(api.whatsapp.updateMessageStatus, {
+          whatsappMessageId: body.key.id,
+          status: body.status,
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      await ctx.runMutation(api.lib.logging.log, {
+        level: "error",
+        category: "whatsapp",
+        message: "Error processing send-message webhook",
+        metadata: { error: error instanceof Error ? error.message : String(error) },
+      });
+
+      return new Response(
+        JSON.stringify({ 
+          error: error instanceof Error ? error.message : "Unknown error" 
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+  }),
+});
+
 // Health check endpoint
 http.route({
   path: "/health",

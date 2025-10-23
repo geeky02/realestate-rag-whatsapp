@@ -23,11 +23,12 @@ export const sendMessage = action({
         throw new Error("Evolution API credentials not configured");
       }
 
-      // Prepare message payload
+      // Prepare message payload for Evolution API
       let payload: any = {
-        number: args.recipientPhone,
+        number: args.recipientPhone.replace(/\D/g, ''), // Remove non-numeric chars
       };
 
+      // Set message content (simple format)
       if (args.messageType === "text" && args.content) {
         payload.text = args.content;
       } else if (args.messageType === "image" && args.mediaUrl) {
@@ -43,17 +44,16 @@ export const sendMessage = action({
       }
 
       // Send to Evolution API
-      const response = await fetch(
-        `${evolutionUrl}/message/sendText/${instanceName}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "apikey": apiKey,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const apiUrl = `${evolutionUrl.replace(/\/$/, '')}/message/sendText/${instanceName}`;
+      
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apiKey": apiKey,
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (!response.ok) {
         throw new Error(`Evolution API error: ${response.statusText}`);

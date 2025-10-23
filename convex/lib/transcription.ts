@@ -1,7 +1,6 @@
 import { action } from "../_generated/server";
 import { v } from "convex/values";
 
-// Transcribe audio using OpenAI Whisper
 export const transcribeAudio = action({
   args: {
     audioUrl: v.string(),

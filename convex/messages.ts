@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
-// Create a new message
 export const create = mutation({
   args: {
     conversationId: v.id("conversations"),
@@ -39,7 +38,6 @@ export const create = mutation({
   },
 });
 
-// Update message content (e.g., after transcription)
 export const updateContent = mutation({
   args: {
     messageId: v.id("messages"),
@@ -53,7 +51,6 @@ export const updateContent = mutation({
   },
 });
 
-// Update message media URL (e.g., after storing in Convex Storage)
 export const updateMediaUrl = mutation({
   args: {
     messageId: v.id("messages"),
@@ -67,7 +64,6 @@ export const updateMediaUrl = mutation({
   },
 });
 
-// Get message by ID
 export const get = query({
   args: { id: v.id("messages") },
   handler: async (ctx, args) => {
@@ -75,7 +71,6 @@ export const get = query({
   },
 });
 
-// List messages for a conversation
 export const listByConversation = query({
   args: {
     conversationId: v.id("conversations"),
@@ -99,7 +94,6 @@ export const listByConversation = query({
   },
 });
 
-// Update message status
 export const updateStatus = mutation({
   args: {
     id: v.id("messages"),
@@ -114,7 +108,6 @@ export const updateStatus = mutation({
   },
 });
 
-// Get message by WhatsApp ID
 export const getByWhatsAppId = query({
   args: { whatsappMessageId: v.string() },
   handler: async (ctx, args) => {
@@ -127,7 +120,6 @@ export const getByWhatsAppId = query({
   },
 });
 
-// Get recent messages for context
 export const getRecentForContext = query({
   args: {
     conversationId: v.id("conversations"),
@@ -146,7 +138,6 @@ export const getRecentForContext = query({
   },
 });
 
-// Add message to queue for processing
 export const addToQueue = mutation({
   args: {
     conversationId: v.id("conversations"),

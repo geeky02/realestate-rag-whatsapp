@@ -20,7 +20,6 @@ export const processMessage = internalAction({
 
       let query = message.content;
 
-      // Process different message types
       if (message.messageType === "audio" && message.mediaUrl) {
         query = await ctx.runAction(api.lib.transcription.transcribeAudio, {
           audioUrl: message.mediaUrl,
@@ -42,7 +41,6 @@ export const processMessage = internalAction({
         throw new Error("No content to process");
       }
 
-      // Use Convex Agent Component approach with vector search
       const queryEmbedding = await ctx.runAction(
         api.lib.openai.generateEmbedding,
         { text: query }
@@ -62,17 +60,14 @@ export const processMessage = internalAction({
         }
       );
 
-      // Agent component: Build RAG context
       const context = buildAgentContext(recentMessages, relevantDocs, query);
 
-      // Agent component: Generate intelligent response
       const response = await ctx.runAction(api.lib.openai.generateAgentResponse, {
         query,
         context,
         conversationHistory: recentMessages,
       });
 
-      // Send response via WhatsApp
       const conversation = await ctx.runQuery(api.conversations.get, {
         id: message.conversationId,
       });
@@ -117,7 +112,6 @@ export const processMessage = internalAction({
   },
 });
 
-// Agent Component: Build intelligent context with RAG
 function buildAgentContext(
   messages: any[],
   documents: any[],

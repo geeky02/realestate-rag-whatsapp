@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 
-// Log system event
 export const log = mutation({
   args: {
     level: v.string(),
@@ -18,14 +17,12 @@ export const log = mutation({
       timestamp: Date.now(),
     });
 
-    // Also log to console for development
     console.log(`[${args.level.toUpperCase()}] [${args.category}] ${args.message}`);
 
     return logId;
   },
 });
 
-// Get recent logs
 export const getRecent = query({
   args: {
     level: v.optional(v.string()),
@@ -59,7 +56,6 @@ export const getRecent = query({
   },
 });
 
-// Clear old logs (for maintenance)
 export const clearOld = mutation({
   args: {
     olderThanDays: v.number(),

@@ -1,7 +1,6 @@
 import { action } from "../_generated/server";
 import { v } from "convex/values";
 
-// Generate text embedding using OpenAI
 export const generateEmbedding = action({
   args: {
     text: v.string(),
@@ -35,7 +34,6 @@ export const generateEmbedding = action({
   },
 });
 
-// Generate response using OpenAI Chat Completions
 export const generateResponse = action({
   args: {
     query: v.string(),
@@ -83,7 +81,6 @@ If you don't know something, say so - don't make up information.`;
   },
 });
 
-// Agent Component: Generate intelligent response with conversation history
 export const generateAgentResponse = action({
   args: {
     query: v.string(),

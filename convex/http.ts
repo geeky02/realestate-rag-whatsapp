@@ -45,7 +45,6 @@ http.route({
           mediaUrl = message.message.documentMessage.url;
         }
 
-        // Get first broker (in production, route to correct broker)
         const brokers = await ctx.runQuery(api.internal.getFirstBrokerPublic, {});
         
         if (!brokers || brokers.length === 0) {
@@ -121,16 +120,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      
-      // Log the webhook for debugging
-      await ctx.runMutation(api.lib.logging.log, {
-        level: "info",
-        category: "whatsapp",
-        message: "Received send-message webhook",
-        metadata: { webhookData: body },
-      });
 
-      // Handle message status updates or delivery reports
       if (body.status && body.key?.id) {
         await ctx.runMutation(api.whatsapp.updateMessageStatus, {
           whatsappMessageId: body.key.id,

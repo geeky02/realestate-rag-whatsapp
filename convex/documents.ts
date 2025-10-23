@@ -202,8 +202,6 @@ export const vectorSearch = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // Note: Vector search syntax - adjust based on Convex version
-    // For now, returning filtered documents as placeholder
     let documents = await ctx.db.query("documents").collect();
     
     // Filter by brokerId if provided

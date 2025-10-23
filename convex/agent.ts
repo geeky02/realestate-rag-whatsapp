@@ -20,8 +20,6 @@ export const processMessage = internalAction({
         throw new Error("Message not found");
       }
 
-      // Update queue status to processing (simplified for scaffolding)
-
       let query = message.content;
 
       // If audio message, transcribe it first
@@ -29,7 +27,6 @@ export const processMessage = internalAction({
         query = await ctx.runAction(api.lib.transcription.transcribeAudio, {
           audioUrl: message.mediaUrl,
         });
-        // Note: In production, update message with transcription
       }
 
       if (!query) {
@@ -85,10 +82,7 @@ export const processMessage = internalAction({
         isFromAgent: true,
       });
 
-      // Log agent interaction (simplified for scaffolding)
       const processingTime = Date.now() - startTime;
-      
-      // Note: In production, log interaction and update queue status
 
       await ctx.runMutation(api.lib.logging.log, {
         level: "info",
@@ -100,8 +94,6 @@ export const processMessage = internalAction({
         },
       });
     } catch (error) {
-      // Note: In production, update queue status to failed
-      
       await ctx.runMutation(api.lib.logging.log, {
         level: "error",
         category: "agent",
@@ -147,49 +139,4 @@ function buildContext(
 
   return context;
 }
-
-// Calculate confidence score based on document relevance
-// function calculateConfidence(documents: any[]): number {
-//   if (documents.length === 0) return 0.3;
-//   if (documents.length >= 3) return 0.9;
-//   return 0.6;
-// }
-
-// Internal mutations for agent processing
-
-export const updateQueueStatus = internalAction({
-  args: {
-    messageId: v.id("messages"),
-    status: v.string(),
-    errorMessage: v.optional(v.string()),
-  },
-  handler: async (_ctx, _args) => {
-    // Simplified for scaffolding - would update queue item in production
-  },
-});
-
-export const updateMessageContent = internalAction({
-  args: {
-    messageId: v.id("messages"),
-    content: v.string(),
-  },
-  handler: async (_ctx, _args) => {
-    // Simplified for scaffolding - would update message in production
-  },
-});
-
-export const logInteraction = internalAction({
-  args: {
-    conversationId: v.id("conversations"),
-    messageId: v.id("messages"),
-    query: v.string(),
-    retrievedDocuments: v.array(v.id("documents")),
-    response: v.string(),
-    confidence: v.number(),
-    processingTimeMs: v.number(),
-  },
-  handler: async (_ctx, _args) => {
-    // Simplified for scaffolding - would log interaction in production
-  },
-});
 

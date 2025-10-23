@@ -76,7 +76,6 @@ export default function DocumentUpload() {
       const fileInput = document.getElementById('file-upload') as HTMLInputElement
       if (fileInput) fileInput.value = ''
     } catch (error) {
-      console.error('Upload error:', error)
       setUploadStatus('error')
     } finally {
       setUploading(false)

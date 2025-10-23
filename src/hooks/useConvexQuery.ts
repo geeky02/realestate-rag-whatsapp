@@ -13,7 +13,7 @@ export function useQuery<Query extends FunctionReference<'query'>>(
   isLoading: boolean
   error: Error | undefined
 } {
-  const result = useConvexQuery(query, args === 'skip' ? 'skip' : args)
+  const result = useConvexQuery(query, args)
 
   return {
     data: result,

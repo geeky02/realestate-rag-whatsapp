@@ -23,7 +23,7 @@ http.route({
         const message = data.message || data;
         
         // Extract message details
-        const fromPhone = message.key?.remoteJid?.replace("@s.whatsapp.net", "");
+        const fromPhone = message.key?.remoteJid?.replace("@s.whatsapp.net", "") || "";
         const messageContent = 
           message.message?.conversation ||
           message.message?.extendedTextMessage?.text ||
@@ -53,6 +53,12 @@ http.route({
         }
 
         const brokerId = brokers[0]._id;
+        const whatsappMessageId = message.key?.id || `msg_${Date.now()}`;
+
+        // Validate required fields
+        if (!fromPhone) {
+          return new Response("Missing phone number", { status: 400 });
+        }
 
         // Process incoming message
         await ctx.runMutation(internal.whatsapp.processIncomingMessage, {
@@ -60,7 +66,7 @@ http.route({
           messageType,
           content: messageContent,
           mediaUrl,
-          whatsappMessageId: message.key.id,
+          whatsappMessageId,
           brokerId,
           metadata: { rawMessage: message },
         });

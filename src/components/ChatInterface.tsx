@@ -100,9 +100,35 @@ export default function ChatInterface({ conversationId }: ChatInterfaceProps) {
                     )}
 
                     <div className="whitespace-pre-wrap break-words">
-                      {message.messageType === 'audio' && !message.content ? (
-                        <div className="flex items-center gap-2 text-sm italic">
-                          🎤 Voice message (transcribing...)
+                      {message.messageType === 'audio' && message.mediaUrl ? (
+                        <div className="space-y-2">
+                          <audio 
+                            controls 
+                            className="w-full max-w-xs"
+                            preload="metadata"
+                          >
+                            <source src={message.mediaUrl} type="audio/ogg" />
+                            <source src={message.mediaUrl} type="audio/mpeg" />
+                            Your browser does not support audio playback.
+                          </audio>
+                          {message.content && (
+                            <div className="text-sm opacity-90">
+                              📝 {message.content}
+                            </div>
+                          )}
+                        </div>
+                      ) : message.messageType === 'image' && message.mediaUrl ? (
+                        <div className="space-y-2">
+                          <img 
+                            src={message.mediaUrl} 
+                            alt="Shared image"
+                            className="max-w-sm rounded-lg"
+                          />
+                          {message.content && (
+                            <div className="text-sm">
+                              {message.content}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         message.content
